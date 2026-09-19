@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: techstock-ns
+data:
+  MONGO_HOST: mongo-service
+  MONGO_DB: techstock_db

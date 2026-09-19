@@ -1,0 +1,71 @@
+name: TechStock CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME_BACKEND: ${{ secrets.DOCKER_USERNAME }}/techstock-backend
+      IMAGE_NAME_FRONTEND: ${{ secrets.DOCKER_USERNAME }}/techstock-frontend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test backend
+        run: |
+          python -m pip install -r backend/requirements.txt
+          python -m pytest backend/tests -q
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Test and lint frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test
+          npm run lint
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Check backend Dockerfile best practices
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ./backend/Dockerfile
+          no-fail: true
+      - name: Check frontend Dockerfile best practices
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ./frontend/Dockerfile
+          no-fail: true
+      - name: Build and push backend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME_BACKEND }}:latest
+            ${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
+      - name: Build and push frontend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME_FRONTEND }}:latest
+            ${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
+          build-args: |
+            VITE_API_URL=/api
