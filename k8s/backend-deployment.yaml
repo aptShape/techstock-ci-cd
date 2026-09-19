@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: "<DOCKER_USERNAME>/techstock-backend:latest"
+          image: "hs232067/techstock-backend:latest"
           imagePullPolicy: Always
           ports:
             - containerPort: 8000

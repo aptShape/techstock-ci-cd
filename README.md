@@ -109,8 +109,8 @@ Create your own GitHub repository and configure these Actions repository secrets
 
 Create these Docker Hub repositories under that account:
 
-- `<DOCKER_USERNAME>/techstock-backend`
-- `<DOCKER_USERNAME>/techstock-frontend`
+- `hs232067/techstock-backend`
+- `hs232067/techstock-frontend`
 
 The workflow derives the namespace from `DOCKER_USERNAME`; no personal
 registry account is hardcoded. Configure your Git remote and use `main` as
@@ -148,7 +148,7 @@ under `stringData`. Both MongoDB and the backend consume its
 
 Do **not** apply `k8s/secrets.yaml` unchanged, commit real credentials to it,
 or blindly apply the entire `k8s/` directory. Application image references
-also contain `<DOCKER_USERNAME>`, which Kubernetes does not substitute.
+also contain `hs232067`, which Kubernetes does not substitute.
 
 Create the namespace, ConfigMap, and actual Secret explicitly. Replace the
 example credential values below before running:
@@ -173,7 +173,7 @@ These PowerShell commands render the image placeholders in memory:
 ```powershell
 $dockerUsername = 'YOUR_DOCKER_HUB_USERNAME'
 foreach ($manifest in @('k8s/backend-deployment.yaml', 'k8s/frontend-deployment.yaml')) {
-    (Get-Content -Raw $manifest).Replace('<DOCKER_USERNAME>', $dockerUsername) | kubectl apply -f -
+    kubectl apply -f $manifest
 }
 kubectl apply -f k8s/ingress.yaml
 kubectl rollout status deployment/backend -n techstock-ns --timeout=180s
